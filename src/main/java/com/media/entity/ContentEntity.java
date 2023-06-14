@@ -1,12 +1,17 @@
 package com.media.entity;
 
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,5 +41,14 @@ public class ContentEntity {
 	private String publishedBy;
 
 	private Integer status;
+
+	private String contentType;
+
+	private String language;
+
+	@Transient
+	private List<String> browse;
+
+	private String content;
 
 }
