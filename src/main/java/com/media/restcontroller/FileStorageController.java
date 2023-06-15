@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -27,51 +28,76 @@ import com.media.repo.ContentRepo;
 @CrossOrigin(origins = "http://localhost:3000")
 public class FileStorageController {
 
-    @Value("${app.rootstorage}")
-    private String rootStorage;
+	@Value("${app.rootstorage}")
+	private String rootStorage;
 
-    @Autowired
-    private ContentRepo contentRepo;
+	@Value("${app.datastorage}")
+	private String dataStorage;
 
-    @PostMapping("/database")
-    public ResponseEntity<?> submitForm(@RequestPart("model") MediaModel model, @RequestPart("file") List<MultipartFile> files) {
-        String folderPath = rootStorage + "media/" + model.getContentType();
-        File folder = new File(folderPath);
-        folder.mkdirs();
+	@Autowired
+	private ContentRepo contentRepo;
 
-        List<String> savedFilePaths = new ArrayList<>();
+	@PostMapping("/database")
+	public ResponseEntity<?> submitForm(@RequestPart("model") MediaModel model,
+			@RequestPart("file") List<MultipartFile> files) {
+        String folderPath = rootStorage + dataStorage;
+		String CreateFolder = dataStorage;
+		File folder = new File(folderPath);
+		folder.mkdirs();
+int count =1;
+		List<String> savedFilePaths = new ArrayList<>();
 
-        for (MultipartFile file : files) {
-            String fileFullPath = folderPath + "/" + file.getOriginalFilename();
-            try {
-                FileOutputStream fileOutputStream = new FileOutputStream(fileFullPath);
-                fileOutputStream.write(file.getBytes());
-                fileOutputStream.close();
-                savedFilePaths.add(fileFullPath);
-                System.out.println("File saved successfully: " + fileFullPath);
-            } catch (IOException e) {
-                System.out.println("Error saving the file: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
+//		for (MultipartFile file : files) {
+//			String[] split = file.getOriginalFilename().split(".");
+//			
+//			String fileFullPath = rootStorage + folderPath + "/" + file.getOriginalFilename();
+//			try {
+//				FileOutputStream fileOutputStream = new FileOutputStream(fileFullPath);
+//				fileOutputStream.write(file.getBytes());
+//				fileOutputStream.close();
+//				savedFilePaths.add(fileFullPath);
+//				System.out.println("File saved successfully: " + fileFullPath);
+//			} catch (IOException e) {
+//				System.out.println("Error saving the file: " + e.getMessage());
+//				e.printStackTrace();
+//			}
+//		}
+		for (MultipartFile file : files) {
+			String[] split = file.getOriginalFilename().split("\\.");
+			System.out.println(file.getOriginalFilename());
+			System.out.println(Arrays.toString(split));
+			String fileFullPath =  count+"."+split[1];
+			try {
+				FileOutputStream fileOutputStream = new FileOutputStream(fileFullPath);
+				fileOutputStream.write(file.getBytes());
+				fileOutputStream.close();
+				savedFilePaths.add(fileFullPath);
+				System.out.println("File saved successfully: " + fileFullPath);
+			} catch (IOException e) {
+				System.out.println("Error saving the file: " + e.getMessage());
+				e.printStackTrace();
+			}
+			count++;
+		}
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyyHHmmssSSS");
-        String currentDateAndTime = dateFormat.format(new Date());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyyHHmmssSSS");
+		String currentDateAndTime = dateFormat.format(new Date());
 
-        ContentEntity contentEntity = new ContentEntity();
-        contentEntity.setTitle(model.getTitle());
-        contentEntity.setContentType(model.getContentType());
-        contentEntity.setLanguage(model.getLanguage());
-        contentEntity.setEndPoint(String.join(",", savedFilePaths));
-        contentEntity.setContent(model.getContent());
-        contentEntity.setContentPath(currentDateAndTime);
-        contentEntity.setPublishedDate(new Date());
-        contentEntity.setLastModifiedDate(new Date());
-        contentEntity.setPublishedBy("Content Creator");
-        contentEntity.setStatus(1);
+		ContentEntity contentEntity = new ContentEntity();
+		contentEntity.setTitle(model.getTitle());
+		contentEntity.setContentType(model.getContentType());
+		contentEntity.setLanguage(model.getLanguage());
+//        contentEntity.setEndPoint(String.join(",", savedFilePaths));
+		contentEntity.setEndPoint(currentDateAndTime);
+		contentEntity.setContent(model.getContent());
+		contentEntity.setContentPath(String.join(",", savedFilePaths));
+		contentEntity.setPublishedDate(new Date());
+		contentEntity.setLastModifiedDate(new Date());
+		contentEntity.setPublishedBy("Content Creator");
+		contentEntity.setStatus(1);
 
-        contentRepo.save(contentEntity);
+		contentRepo.save(contentEntity);
 
-        return ResponseEntity.ok(contentEntity);
-    }
+		return ResponseEntity.ok(contentEntity);
+	}
 }
